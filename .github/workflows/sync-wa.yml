@@ -22,12 +22,14 @@ jobs:
           node-version: '20'
 
       - name: Install Playwright
+        working-directory: /tmp
         run: |
           npm init -y
           npm install playwright
           npx playwright install chromium --with-deps
 
       - name: Fetch WA Proto Bundle
+        working-directory: /tmp
         run: |
           mkdir -p /tmp/wa-cache
 
@@ -46,7 +48,7 @@ jobs:
             if (!url.endsWith('.js')) return
             try {
               const text = await response.text()
-              bundles.push(text)
+              if (text.includes('internalSpec')) bundles.push(text)
             } catch {}
           })
 
@@ -75,10 +77,10 @@ jobs:
           fi
           cp -r /tmp/wa-cache/. .
           git add .
-          git diff --staged --quiet || git commit -m "chore: sync wa bundle"
+          git diff --staged --quiet || git commit -m "chore: sync wa web bundle via playwright"
           git push origin wa-cache
           echo "✅ Pushed wa-cache branch successfully"
 
       - name: Cleanup
         if: always()
-        run: rm -rf /tmp/wa-cache fetch-bundle.mjs
+        run: rm -rf /tmp/wa-cache /tmp/fetch-bundle.mjs /tmp/node_modules /tmp/package.json /tmp/package-lock.json

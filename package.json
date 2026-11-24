@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@zervonex/baileys",
+  "name": "@zervonexx/baileys",
   "type": "module",
-  "version": "4.0.9-patch.1",
+  "version": "5.0.0",
   "description": "Advanced WhatsApp Web API built on Baileys — interactive messages, buttons, carousels, products, events, payments, polls, albums, sticker packs and more.",
   "keywords": [
     "baileys",
@@ -16,6 +16,7 @@
     "zervonex baileys",
     "Zervonex",
     "zervonex",
+    "zervonexx",
     "baileys-advanced",
     "whiskeysockets",
     "whatsapp",
@@ -77,7 +78,6 @@
     "gen:protobuf": "node ./WAProto/index.js",
     "prepack": "echo 'Zervonex WhatsApp Library'",
     "prepare": "echo 'Zervonex WhatsApp Library'",
-    "preinstall": "node ./engine-requirements.js",
     "test": "node ./lib/index.js"
   },
   "files": [

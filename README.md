@@ -2,31 +2,31 @@
 
 <img src="https://files.catbox.moe/qrx39r.png" alt="zervonex Banner" />
 
-# @zervonex/baileys
+# @zervonexx/baileys
 
-<a href="https://www.npmjs.com/package/@zervonex/baileys">
+<a href="https://www.npmjs.com/package/@zervonexx/baileys">
   <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%" />
 </a>
 
 **Advanced WhatsApp Web API — Built on WhiskeySockets/Baileys**
 
-<a href="https://www.npmjs.com/package/@zervonex/baileys">
-  <img src="https://img.shields.io/npm/v/@zervonex/baileys?color=success&logo=npm&style=flat-square" alt="NPM Version" />
+<a href="https://www.npmjs.com/package/@zervonexx/baileys">
+  <img src="https://img.shields.io/npm/v/@zervonexx/baileys?color=success&logo=npm&style=flat-square" alt="NPM Version" />
 </a>
-<a href="https://www.npmjs.com/package/@zervonex/baileys">
-  <img src="https://img.shields.io/npm/dt/@zervonex/baileys?color=blue&logo=npm&style=flat-square" alt="Downloads" />
+<a href="https://www.npmjs.com/package/@zervonexx/baileys">
+  <img src="https://img.shields.io/npm/dt/@zervonexx/baileys?color=blue&logo=npm&style=flat-square" alt="Downloads" />
 </a>
 <a href="./SECURITY.md">
   <img src="https://img.shields.io/badge/Security-Disclosure-blue?style=flat-square" alt="Security" />
 </a>
 <a href="https://github.com/nexustechpro2/baileys/blob/main/LICENSE">
-  <img src="https://img.shields.io/npm/l/@zervonex/baileys?color=yellow&style=flat-square" alt="License" />
+  <img src="https://img.shields.io/npm/l/@zervonexx/baileys?color=yellow&style=flat-square" alt="License" />
 </a>
 <a href="https://nodejs.org">
-  <img src="https://img.shields.io/node/v/@zervonex/baileys?style=flat-square" alt="Node Version" />
+  <img src="https://img.shields.io/node/v/@zervonexx/baileys?style=flat-square" alt="Node Version" />
 </a>
-<a href="https://socket.dev/npm/package/@zervonex/baileys">
-  <img src="https://socket.dev/api/badge/npm/package/@zervonex/baileys" alt="Socket Badge" />
+<a href="https://socket.dev/npm/package/@zervonexx/baileys">
+  <img src="https://socket.dev/api/badge/npm/package/@zervonexx/baileys" alt="Socket Badge" />
 </a>
 
 <a href="https://www.whatsapp.com/channel/0029VbBK53XBvvslYeZlBe0V">
@@ -136,10 +136,10 @@ If you require fully static, air-gapped installs, this package is not suitable f
 
 ```bash
 # npm
-npm install @zervonex/baileys
+npm install @zervonexx/baileys
 
 # yarn
-yarn add @zervonex/baileys
+yarn add @zervonexx/baileys
 ```
 
 **Drop-in replacement for `@whiskeysockets/baileys`** — add this to `package.json`:
@@ -147,7 +147,7 @@ yarn add @zervonex/baileys
 ```json
 {
   "dependencies": {
-    "@zervonex/baileys": "latest"
+    "@zervonexx/baileys": "latest"
   }
 }
 ```
@@ -156,10 +156,10 @@ yarn add @zervonex/baileys
 
 ```javascript
 // ESM (recommended)
-import makeWASocket from '@zervonex/baileys'
+import makeWASocket from '@zervonexx/baileys'
 
 // CommonJS
-const { default: makeWASocket } = require('@zervonex/baileys')
+const { default: makeWASocket } = require('@zervonexx/baileys')
 ```
 
 </details>
@@ -177,7 +177,7 @@ import makeWASocket, {
   DisconnectReason,
   makeCacheableSignalKeyStore,
   Browsers
-} from '@zervonex/baileys'
+} from '@zervonexx/baileys'
 import pino from 'pino'
 
 const connectToWhatsApp = async () => {
@@ -262,7 +262,7 @@ import makeWASocket, {
   useMultiFileAuthState,
   makeCacheableSignalKeyStore,
   Browsers
-} from '@zervonex/baileys'
+} from '@zervonexx/baileys'
 import pino from 'pino'
 
 const { state, saveCreds } = await useMultiFileAuthState('auth_session')
@@ -305,7 +305,7 @@ import makeWASocket, {
   useMultiFileAuthState,
   makeCacheableSignalKeyStore,
   Browsers
-} from '@zervonex/baileys'
+} from '@zervonexx/baileys'
 import pino from 'pino'
 
 const { state, saveCreds } = await useMultiFileAuthState('auth_session')
@@ -352,7 +352,7 @@ The `browser` config tells WhatsApp what client you appear to be. This affects h
 | `Browsers.appropriate('Chrome')` | Auto-detects your OS | Uses your actual platform |
 
 ```javascript
-import { Browsers } from '@zervonex/baileys'
+import { Browsers } from '@zervonexx/baileys'
 
 const sock = makeWASocket({
   browser: Browsers.ubuntu('Chrome')   // recommended
@@ -425,7 +425,7 @@ const sock = makeWASocket({
 Atomic writes (tmp → rename with fallback), corrupt file self-healing, and automatic old pre-key cleanup. Best for single-instance bots or local development.
 
 ```javascript
-import { useMultiFileAuthState } from '@zervonex/baileys'
+import { useMultiFileAuthState } from '@zervonexx/baileys'
 
 const { state, saveCreds, getStats } = await useMultiFileAuthState('auth_session', {
   preKeyRetention:  150, // how many recent prekeys to keep (default: 150)
@@ -455,7 +455,7 @@ await rm('auth_session', { recursive: true, force: true })
 Universal adapter for any database backend via [Keyv](https://www.npmjs.com/package/keyv). Pass a connection string — the matching backend driver is resolved, instantiated, and **cached automatically per session** — no manual adapter imports needed.
 
 ```javascript
-import { useKeyvAuthState } from '@zervonex/baileys'
+import { useKeyvAuthState } from '@zervonexx/baileys'
 
 // Redis
 const { state, saveCreds } = await useKeyvAuthState('bot1', 'redis://localhost:6379')
@@ -518,7 +518,7 @@ await clearSession()
 **Check auth without loading full state:**
 
 ```javascript
-import { hasKeyvAuth } from '@zervonex/baileys'
+import { hasKeyvAuth } from '@zervonexx/baileys'
 
 // true if creds exist and contain noiseKey + signedIdentityKey
 const valid = await hasKeyvAuth('bot1', backend)
@@ -1764,7 +1764,7 @@ await sock.sendMessage(jid, {
 // Text, code and table
 await sock.airich()
   .setTitle('zervonex Bot')
-  .setFooter('Powered by @zervonex/baileys')
+  .setFooter('Powered by @zervonexx/baileys')
   .addText('*Welcome!*')
   .addCode('javascript', 'console.log("Hello from zervonex")')
   .addTable([
@@ -2081,7 +2081,7 @@ await r.send(jid)
 ```javascript
 await sock.airich()
   .setTitle('zervonex Bot')
-  .setFooter('Powered by @zervonex/baileys latest')
+  .setFooter('Powered by @zervonexx/baileys latest')
   .addText('*Welcome to zervonex!*')
   .addDivider()
   .addCode('python', 'print("Hello from zervonex")')
@@ -2725,7 +2725,7 @@ await sock.sendMessage(jid, { pin: { type: 0, time: 0, key: message.key } })
 <summary><strong>Show media download examples</strong></summary>
 
 ```javascript
-import { downloadMediaMessage, getContentType } from '@zervonex/baileys'
+import { downloadMediaMessage, getContentType } from '@zervonexx/baileys'
 
 sock.ev.on('messages.upsert', async ({ messages }) => {
   const msg = messages[0]
@@ -2969,7 +2969,7 @@ await sock.notifyPushName(groupJid, [{ jid: '1234567890@s.whatsapp.net', pushNam
 const result = await sock.checkStatusWA('1234567890')
 
 // Or direct import — no socket needed
-import { checkStatusWA } from '@zervonex/baileys'
+import { checkStatusWA } from '@zervonexx/baileys'
 const result = await checkStatusWA('1234567890')
 
 // Active number response
@@ -2994,7 +2994,7 @@ const result = await checkStatusWA('1234567890')
 }
 
 // Usage example
-import { checkStatusWA } from '@zervonex/baileys'
+import { checkStatusWA } from '@zervonexx/baileys'
 const check = await checkStatusWA('1234567890')
 if (check.isBanned) {
   console.log(`Banned: ${check.banInfo.banType}`)
@@ -3632,7 +3632,7 @@ await sock.sendVideoGridMessage(jid, {
 > [!WARNING] The A2UI catalog (`v0.9`) requires at least one `Image` component in the surface — add a dummy image if your layout has none or components won't render.
 
 ```javascript
-import { A2UI } from '@zervonex/baileys'
+import { A2UI } from '@zervonexx/baileys'
 
 // Static helpers
 A2UI.text('id', 'Hello!', { variant: 'h1' })
@@ -3827,7 +3827,7 @@ if (captured) await sock.relayAiRich(targetJid, captured)
 <details>
 <summary><strong>Show all exports</strong></summary>
 
-Everything exported from `@zervonex/baileys` that you can import directly:
+Everything exported from `@zervonexx/baileys` that you can import directly:
 
 ```javascript
 import {
@@ -3898,7 +3898,7 @@ import {
 
   // Status checker
   checkStatusWA,
-} from '@zervonex/baileys'
+} from '@zervonexx/baileys'
 ```
 
 </details>
@@ -4061,7 +4061,7 @@ try {
 <summary><strong>Poll Decryption</strong></summary>
 
 ```javascript
-import { getAggregateVotesInPollMessage } from '@zervonex/baileys'
+import { getAggregateVotesInPollMessage } from '@zervonexx/baileys'
 
 sock.ev.on('messages.update', async (event) => {
   for (const { key, update } of event) {
@@ -4108,6 +4108,6 @@ This project is **not** affiliated with WhatsApp or Meta. Use responsibly:
 
 ⭐ **Star us on GitHub!** ⭐
 
-[GitHub](https://github.com/nexustechpro2/baileys) • [NPM](https://www.npmjs.com/package/@zervonex/baileys)
+[GitHub](https://github.com/nexustechpro2/baileys) • [NPM](https://www.npmjs.com/package/@zervonexx/baileys)
 
 </div>

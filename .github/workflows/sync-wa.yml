@@ -2,7 +2,7 @@ name: Sync WA Version
 
 on:
   schedule:
-    - cron: '0 0 * * 0'  # Every Sunday at midnight
+    - cron: '0 0 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Baileys repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -23,12 +23,19 @@ jobs:
             -H "Sec-Fetch-Mode: no-cors" \
             -H "Sec-Fetch-Site: same-origin" \
             https://web.whatsapp.com/sw.js)
+          echo "SW size: ${#SW} bytes"
           VERSION=$(echo "$SW" | grep -o 'client_revision[^0-9]*[0-9]*' | grep -o '[0-9]*')
+          if [ -z "$VERSION" ]; then
+            echo "WARNING: Could not extract version from sw.js"
+            VERSION="unknown"
+          fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Detected version: $VERSION"
 
       - name: Fetch Proto Bundle
         run: |
           mkdir -p /tmp/wa-cache
+
           HTML=$(curl -s \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
             -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
@@ -36,9 +43,25 @@ jobs:
             -H "Sec-Fetch-Mode: navigate" \
             -H "Sec-Fetch-Site: none" \
             https://web.whatsapp.com)
+
+          echo "HTML size: ${#HTML} bytes"
+
           URLS=$(echo "$HTML" | grep -oP 'src="(https?://[^"]+\.js[^"]*)"' | grep -oP 'https?://[^"]+')
+
+          URL_COUNT=$(echo "$URLS" | grep -c 'http' || true)
+          echo "JS URLs found: $URL_COUNT"
+
+          if [ -z "$URLS" ]; then
+            echo "WARNING: No JS URLs extracted from WhatsApp HTML"
+            echo "BUNDLE_FOUND=false" >> $GITHUB_ENV
+            echo "" > /tmp/wa-cache/WAProto.bundle.js
+            echo "{\"version\":\"$VERSION\",\"hash\":\"\",\"updated\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"error\":\"no_urls\"}" > /tmp/wa-cache/wa-version.json
+            exit 0
+          fi
+
           BUNDLE=""
           for URL in $URLS; do
+            echo "Fetching: $URL"
             CONTENT=$(curl -s "$URL" \
               -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
               -H "Referer: https://web.whatsapp.com" \
@@ -46,25 +69,49 @@ jobs:
               -H "Sec-Fetch-Mode: no-cors" \
               -H "Sec-Fetch-Site: same-origin")
             if echo "$CONTENT" | grep -q 'internalSpec'; then
+              echo "✓ Found internalSpec in: $URL"
               BUNDLE="$BUNDLE$CONTENT"
             fi
           done
+
+          if [ -z "$BUNDLE" ]; then
+            echo "WARNING: No bundle containing internalSpec was found"
+            echo "BUNDLE_FOUND=false" >> $GITHUB_ENV
+            echo "" > /tmp/wa-cache/WAProto.bundle.js
+            echo "{\"version\":\"$VERSION\",\"hash\":\"\",\"updated\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"error\":\"no_bundle\"}" > /tmp/wa-cache/wa-version.json
+            exit 0
+          fi
+
           HASH=$(echo "$BUNDLE" | sha256sum | awk '{print $1}')
           echo "HASH=$HASH" >> $GITHUB_ENV
+          echo "BUNDLE_FOUND=true" >> $GITHUB_ENV
+          echo "Bundle hash: $HASH"
+
           echo "$BUNDLE" > /tmp/wa-cache/WAProto.bundle.js
           echo "{\"version\":\"$VERSION\",\"hash\":\"$HASH\",\"updated\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > /tmp/wa-cache/wa-version.json
+
+          echo "WAProto.bundle.js size: $(wc -c < /tmp/wa-cache/WAProto.bundle.js) bytes"
 
       - name: Commit and Push to wa-cache branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin wa-cache 2>/dev/null || true
-          git checkout -B wa-cache origin/wa-cache 2>/dev/null || git checkout --orphan wa-cache
-          git rm -rf . --quiet 2>/dev/null || true
+          if git rev-parse --verify origin/wa-cache > /dev/null 2>&1; then
+            git checkout -B wa-cache origin/wa-cache
+          else
+            git checkout --orphan wa-cache
+            git rm -rf . --quiet 2>/dev/null || true
+          fi
           cp -r /tmp/wa-cache/. .
           git add .
-          git diff --staged --quiet || git commit -m "chore: sync wa version ${{ env.VERSION }}"
-          git push origin wa-cache
+          if [ "${{ env.BUNDLE_FOUND }}" = "true" ]; then
+            git diff --staged --quiet || git commit -m "chore: sync wa version ${{ env.VERSION }}"
+            git push origin wa-cache
+            echo "✓ Pushed wa-cache branch successfully"
+          else
+            echo "Skipping commit — no bundle found"
+          fi
 
       - name: Cleanup
         if: always()

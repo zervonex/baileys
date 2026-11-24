@@ -1,0 +1,71 @@
+name: Sync WA Version
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at midnight
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Baileys repo
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch WA Version
+        run: |
+          SW=$(curl -s \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Referer: https://web.whatsapp.com" \
+            -H "Sec-Fetch-Dest: script" \
+            -H "Sec-Fetch-Mode: no-cors" \
+            -H "Sec-Fetch-Site: same-origin" \
+            https://web.whatsapp.com/sw.js)
+          VERSION=$(echo "$SW" | grep -o 'client_revision[^0-9]*[0-9]*' | grep -o '[0-9]*')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Fetch Proto Bundle
+        run: |
+          mkdir -p /tmp/wa-cache
+          HTML=$(curl -s \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+            -H "Sec-Fetch-Dest: document" \
+            -H "Sec-Fetch-Mode: navigate" \
+            -H "Sec-Fetch-Site: none" \
+            https://web.whatsapp.com)
+          URLS=$(echo "$HTML" | grep -oP 'src="(https?://[^"]+\.js[^"]*)"' | grep -oP 'https?://[^"]+')
+          BUNDLE=""
+          for URL in $URLS; do
+            CONTENT=$(curl -s "$URL" \
+              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+              -H "Referer: https://web.whatsapp.com" \
+              -H "Sec-Fetch-Dest: script" \
+              -H "Sec-Fetch-Mode: no-cors" \
+              -H "Sec-Fetch-Site: same-origin")
+            if echo "$CONTENT" | grep -q 'internalSpec'; then
+              BUNDLE="$BUNDLE$CONTENT"
+            fi
+          done
+          HASH=$(echo "$BUNDLE" | sha256sum | awk '{print $1}')
+          echo "HASH=$HASH" >> $GITHUB_ENV
+          echo "$BUNDLE" > /tmp/wa-cache/WAProto.bundle.js
+          echo "{\"version\":\"$VERSION\",\"hash\":\"$HASH\",\"updated\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > /tmp/wa-cache/wa-version.json
+
+      - name: Commit and Push to wa-cache branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin wa-cache 2>/dev/null || true
+          git checkout -B wa-cache origin/wa-cache 2>/dev/null || git checkout --orphan wa-cache
+          git rm -rf . --quiet 2>/dev/null || true
+          cp -r /tmp/wa-cache/. .
+          git add .
+          git diff --staged --quiet || git commit -m "chore: sync wa version ${{ env.VERSION }}"
+          git push origin wa-cache
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf /tmp/wa-cache

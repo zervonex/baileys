@@ -45,13 +45,13 @@ jobs:
 
           page.on('response', async (response) => {
             const url = response.url()
-            if (!url.endsWith('.js')) return
+            if (!url.includes('.js')) return
             try {
               const text = await response.text()
-              if (text.includes('internalSpec')) bundles.push(text)
+              bundles.push(text)
             } catch {}
           })
-
+          
           await page.goto('https://web.whatsapp.com/', { waitUntil: 'networkidle', timeout: 120000 })
           await browser.close()
 

@@ -41,25 +41,43 @@ jobs:
           const browser = await chromium.launch({ headless: true })
           const page = await browser.newPage()
 
-          const bundles = []
+          const bundleTexts = []
+          let version = 'unknown'
 
-          page.on('response', async (response) => {
+          const responsePromises = []
+
+          page.on('response', (response) => {
             const url = response.url()
             if (!url.includes('.js')) return
-            try {
-              const text = await response.text()
-              bundles.push(text)
-            } catch {}
+            const p = response.text().then((text) => {
+              if (url.includes('sw.js') || url.endsWith('/sw.js')) {
+                const m = text.match(/client_revision[^0-9]*([0-9]+)/)
+                if (m) version = m[1]
+              }
+              if (text.includes('internalSpec')) bundleTexts.push(text)
+            }).catch(() => {})
+            responsePromises.push(p)
           })
-          
+
           await page.goto('https://web.whatsapp.com/', { waitUntil: 'networkidle', timeout: 120000 })
+          await Promise.allSettled(responsePromises)
           await browser.close()
 
-          const bundle = bundles.join('\n')
+          if (version === 'unknown') {
+            console.warn('⚠️  client_revision not found in sw.js responses')
+          }
+
+          const bundle = bundleTexts.join('\n')
           const hash = createHash('sha256').update(bundle).digest('hex')
+
           writeFileSync('/tmp/wa-cache/WAProto.bundle.js', bundle)
-          writeFileSync('/tmp/wa-cache/wa-version.json', JSON.stringify({ hash, updated: new Date().toISOString() }))
-          console.log(`✅ ${bundles.length} scripts, hash: ${hash}`)
+          writeFileSync('/tmp/wa-cache/wa-version.json', JSON.stringify({
+            version,
+            hash,
+            updated: new Date().toISOString(),
+          }))
+
+          console.log(`✅ version: ${version} | scripts: ${bundleTexts.length} | hash: ${hash}`)
           EOF
 
           node fetch-bundle.mjs
@@ -77,7 +95,8 @@ jobs:
           fi
           cp -r /tmp/wa-cache/. .
           git add .
-          git diff --staged --quiet || git commit -m "chore: sync wa web bundle via playwright"
+          VERSION=$(node -e "process.stdout.write(require('./wa-version.json').version)")
+          git diff --staged --quiet || git commit -m "chore: sync wa web bundle v${VERSION}"
           git push origin wa-cache
           echo "✅ Pushed wa-cache branch successfully"
 

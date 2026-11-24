@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@zervonexx/baileys",
   "type": "module",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Advanced WhatsApp Web API built on Baileys — interactive messages, buttons, carousels, products, events, payments, polls, albums, sticker packs and more.",
   "keywords": [
     "baileys",
@@ -62,13 +62,13 @@
     "javascript",
     "esm"
   ],
-  "homepage": "https://github.com/nexustechpro2/baileys/",
+  "homepage": "https://github.com/zervonex/baileys/",
   "bugs": {
-    "url": "https://github.com/nexustechpro2/baileys/issues"
+    "url": "https://github.com/zervonex/baileys/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nexustechpro2/baileys.git"
+    "url": "git+https://github.com/zervonex/baileys.git"
   },
   "license": "MIT",
   "author": "zervonex",
@@ -84,8 +84,7 @@
     "lib/**/*.js",
     "WAProto/**/*.js",
     "WAProto/**/*.json",
-    "WAProto/**/*.proto",
-    "engine-requirements.js"
+    "WAProto/**/*.proto"
   ],
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",

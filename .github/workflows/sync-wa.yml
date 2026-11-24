@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout Baileys repo
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -22,38 +22,45 @@ jobs:
           node-version: '20'
 
       - name: Install Playwright
-        working-directory: /tmp
         run: |
+          cd /tmp
           npm init -y
           npm install playwright
           npx playwright install chromium --with-deps
 
       - name: Fetch WA Proto Bundle
-        working-directory: /tmp
         run: |
           mkdir -p /tmp/wa-cache
 
-          cat << 'EOF' > fetch-bundle.mjs
+          cat << 'EOF' > /tmp/fetch-bundle.mjs
           import { chromium } from 'playwright'
           import { createHash } from 'crypto'
           import { writeFileSync } from 'fs'
+
+          // fetch version from sw.js directly — service workers are not
+          // interceptable via page.on('response'), so we fetch it ourselves
+          const swRes = await fetch('https://web.whatsapp.com/sw.js', {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+              'Referer': 'https://web.whatsapp.com',
+            },
+          })
+          const swText = await swRes.text()
+          const versionMatch = swText.match(/client_revision[^0-9]*([0-9]+)/)
+          const version = versionMatch ? versionMatch[1] : 'unknown'
+          console.log(`version: ${version}`)
+          if (version === 'unknown') console.warn('WARNING: client_revision not found in sw.js')
 
           const browser = await chromium.launch({ headless: true })
           const page = await browser.newPage()
 
           const bundleTexts = []
-          let version = 'unknown'
-
           const responsePromises = []
 
           page.on('response', (response) => {
             const url = response.url()
-            if (!url.includes('.js')) return
+            if (!url.endsWith('.js')) return
             const p = response.text().then((text) => {
-              if (url.includes('sw.js') || url.endsWith('/sw.js')) {
-                const m = text.match(/client_revision[^0-9]*([0-9]+)/)
-                if (m) version = m[1]
-              }
               if (text.includes('internalSpec')) bundleTexts.push(text)
             }).catch(() => {})
             responsePromises.push(p)
@@ -63,24 +70,21 @@ jobs:
           await Promise.allSettled(responsePromises)
           await browser.close()
 
-          if (version === 'unknown') {
-            console.warn('⚠️  client_revision not found in sw.js responses')
+          if (!bundleTexts.length) {
+            console.error('ERROR: no internalSpec bundles found')
+            process.exit(1)
           }
 
           const bundle = bundleTexts.join('\n')
           const hash = createHash('sha256').update(bundle).digest('hex')
 
           writeFileSync('/tmp/wa-cache/WAProto.bundle.js', bundle)
-          writeFileSync('/tmp/wa-cache/wa-version.json', JSON.stringify({
-            version,
-            hash,
-            updated: new Date().toISOString(),
-          }))
+          writeFileSync('/tmp/wa-cache/wa-version.json', JSON.stringify({ version, hash, updated: new Date().toISOString() }, null, 2))
 
-          console.log(`✅ version: ${version} | scripts: ${bundleTexts.length} | hash: ${hash}`)
+          console.log(`done: ${bundleTexts.length} scripts | hash: ${hash}`)
           EOF
 
-          node fetch-bundle.mjs
+          cd /tmp && node fetch-bundle.mjs
 
       - name: Commit and Push to wa-cache branch
         run: |
@@ -98,7 +102,7 @@ jobs:
           VERSION=$(node -e "process.stdout.write(require('./wa-version.json').version)")
           git diff --staged --quiet || git commit -m "chore: sync wa web bundle v${VERSION}"
           git push origin wa-cache
-          echo "✅ Pushed wa-cache branch successfully"
+          echo "pushed wa-cache"
 
       - name: Cleanup
         if: always()

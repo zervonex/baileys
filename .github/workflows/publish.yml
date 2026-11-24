@@ -24,7 +24,7 @@ jobs:
           scope: '@zervonexx'
 
       - run: corepack enable
-      - run: yarn install --immutable
+      - run: yarn install --no-immutable
 
       - name: Build
         run: yarn build

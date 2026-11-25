@@ -1,96 +1,48 @@
-import { existsSync, unlinkSync, readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { Worker, isMainThread, workerData, parentPort } from 'worker_threads'
 import logger from '../lib/Utils/logger.js'
-import { fetchProtoBundle } from './fetcher.js'
-import { generateTable, _reloadProto } from './WAProtoCompile.js'
-import { parseBundle } from './parser.js'
+import { _reloadProto } from './WAProtoCompile.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROTO_FILE = join(__dirname, 'WAProto.proto')
 const TABLE_FILE = join(__dirname, 'WAProto.json')
-const SELF = new URL(import.meta.url)
 
-const log = msg => logger.info(msg)
-const err = msg => logger.error(msg)
-const del = (...files) => { for (const f of files) { try { if (existsSync(f)) unlinkSync(f) } catch { } } }
-const isJsonValid = () => { try { const { m, t } = JSON.parse(readFileSync(TABLE_FILE, 'utf8')); return Array.isArray(m) && m.length > 0 && typeof t === 'object' && Object.keys(t).length > 0 } catch { return false } }
-
-function runInWorker(data) {
-    return new Promise((resolve, reject) => {
-        const w = new Worker(SELF, { workerData: data })
-        w.once('message', msg => { w.terminate(); msg.ok ? resolve() : reject(new Error(msg.error)) })
-        w.once('error', reject)
-    })
-}
-
-async function regenerateFromProto() {
-    log('Regenerating WAProto.json from existing WAProto.proto...')
-    await runInWorker({ bundlePath: null, version: null, protoPath: PROTO_FILE, tablePath: TABLE_FILE })
-    _reloadProto()
-    log('Regenerated successfully')
-}
-
-async function refetch() {
-    log('Fetching proto bundle from GitHub...')
-    const { bundle, bundlePath, version } = await fetchProtoBundle()
-    if (!bundle && !bundlePath) throw new Error('fetchProtoBundle returned no bundle')
-    await runInWorker({ bundlePath: bundlePath ?? null, bundle: bundle ?? null, version, protoPath: PROTO_FILE, tablePath: TABLE_FILE })
-    _reloadProto()
-    log(`Fetched and compiled — WA version ${version}`)
-}
-
-async function boot() {
-    const hasProto = existsSync(PROTO_FILE)
-    const hasJson = existsSync(TABLE_FILE)
-
-    if (hasProto && hasJson) {
-        if (isJsonValid()) { _reloadProto(); return }
-        err('WAProto.json is invalid or corrupt — regenerating from proto...')
-        del(TABLE_FILE)
-        try { await regenerateFromProto(); return } catch (e) {
-            err(`Regeneration failed: ${e.message} — refetching from WA Web...`)
-            del(PROTO_FILE, TABLE_FILE)
-            await refetch()
-        }
-        return
-    }
-    if (hasProto && !hasJson) {
-        log('WAProto.json missing — generating from existing proto...')
-        try { await regenerateFromProto(); return } catch (e) {
-            err(`Generation failed: ${e.message} — refetching from WA Web...`)
-            del(PROTO_FILE, TABLE_FILE)
-            await refetch()
-        }
-        return
-    }
-    if (hasJson && !hasProto) { err('WAProto.proto missing but WAProto.json exists — cannot trust JSON, refetching...'); del(TABLE_FILE); await refetch(); return }
-
-    log('No proto files found — fetching from GitHub...')
-    await refetch()
-}
-
-if (!isMainThread) {
-    const { bundlePath, bundle, version, protoPath, tablePath } = workerData
+const isJsonValid = () => {
     try {
-        if (bundlePath || bundle) {
-            const src = bundlePath ? readFileSync(bundlePath, 'utf8') : bundle
-            if (bundlePath) unlinkSync(bundlePath)
-            const { writeFileSync, renameSync } = await import('fs')
-            const tmp = protoPath + '.tmp'
-            writeFileSync(tmp, parseBundle(src, version), 'utf8')
-            renameSync(tmp, protoPath)
-        }
-        await generateTable(protoPath, tablePath)
-        parentPort.postMessage({ ok: true })
-    } catch (e) {
-        parentPort.postMessage({ ok: false, error: e.message })
-    }
-} else {
-    await boot()
+        const { m, t } = JSON.parse(readFileSync(TABLE_FILE, 'utf8'))
+        return Array.isArray(m) && m.length > 0 && typeof t === 'object' && Object.keys(t).length > 0
+    } catch { return false }
 }
 
-export { proto, codec, generateTable, _reloadProto } from './WAProtoCompile.js'
-export { getWAVersion, fetchProtoBundle } from './fetcher.js'
+function boot() {
+    if (!existsSync(PROTO_FILE) || !existsSync(TABLE_FILE)) {
+        throw new Error('[WAProto] WAProto files missing — please reinstall the package')
+    }
+    if (!isJsonValid()) {
+        throw new Error('[WAProto] WAProto.json is invalid or corrupt — please reinstall the package')
+    }
+    _reloadProto()
+    logger.info('[WAProto] Loaded successfully')
+}
+
+export async function getWAVersion() {
+    const res = await fetch('https://web.whatsapp.com/sw.js', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Referer': 'https://web.whatsapp.com',
+            'Sec-Fetch-Dest': 'script',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Site': 'same-origin',
+        }
+    })
+    const text = await res.text()
+    const match = text.match(/client_revision[^0-9]*([0-9]+)/)
+    if (!match) throw new Error('[WAProto] Could not find client_revision in sw.js')
+    return [2, 3000, parseInt(match[1])]
+}
+
+boot()
+
+export { proto, codec, _reloadProto } from './WAProtoCompile.js'
 export { default } from './WAProtoCompile.js'

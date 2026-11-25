@@ -16,14 +16,9 @@ const isJsonValid = () => {
 }
 
 function boot() {
-    if (!existsSync(PROTO_FILE) || !existsSync(TABLE_FILE)) {
-        throw new Error('[WAProto] WAProto files missing — please reinstall the package')
-    }
-    if (!isJsonValid()) {
-        throw new Error('[WAProto] WAProto.json is invalid or corrupt — please reinstall the package')
-    }
+    if (!existsSync(PROTO_FILE) || !existsSync(TABLE_FILE)) throw new Error('[WAProto] Proto files missing — reinstall the package')
+    if (!isJsonValid()) throw new Error('[WAProto] WAProto.json invalid or corrupt — reinstall the package')
     _reloadProto()
-    logger.info('[WAProto] Loaded successfully')
 }
 
 boot()
@@ -44,17 +39,20 @@ const _fetchVersion = async () => {
     })
     const text = await res.text()
     const match = text.match(/client_revision[^0-9]*([0-9]+)/)
-    if (!match) throw new Error('[WAProto] Could not find client_revision in sw.js')
-    return [2, 3000, parseInt(match[1])]
+    if (!match) throw new Error('[WAProto] client_revision not found in sw.js')
+    const revision = parseInt(match[1], 10)
+    if (isNaN(revision)) throw new Error(`[WAProto] client_revision is NaN: ${match[1]}`)
+    return [2, 3000, revision]
 }
 
 export const WAProtoReady = _fetchVersion()
     .then(v => { _versionCache = v })
-    .catch(e => { logger.warn(`[WAProto] getWAVersion failed: ${e.message}`) })
+    .catch(e => { logger.warn(`[WAProto] version fetch failed: ${e.message}`) })
 
 export async function getWAVersion() {
     if (_versionCache) return _versionCache
     await WAProtoReady
+    if (!_versionCache) throw new Error('[WAProto] WA version unavailable — fetch failed at boot')
     return _versionCache
 }
 

@@ -4100,10 +4100,10 @@ This project is **not** affiliated with WhatsApp or Meta. Use responsibly:
 
 <div align="center">
 
-**Made with ❤️ by [nexustechpro2](https://github.com/nexustechpro2)**
+**Made with ❤️ by [zervonex](https://github.com/zervonex)**
 
 ⭐ **Star us on GitHub!** ⭐
 
-[GitHub](https://github.com/nexustechpro2/baileys) • [NPM](https://www.npmjs.com/package/@zervonexx/baileys)
+[GitHub](https://github.com/zervonex/baileys) • [NPM](https://www.npmjs.com/package/@zervonexx/baileys)
 
 </div>

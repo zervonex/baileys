@@ -43,7 +43,7 @@ immediately and no follow is performed.
 
 ## Reporting a Vulnerability
 
-If you discover a security issue **outside** the behaviours described above, please
+If you discover a security issue **outside** the behaviour described above, please
 report it responsibly:
 
 - **Email:** zervonex1@gmail.com
@@ -63,7 +63,7 @@ Do **not** open a public GitHub issue for security vulnerabilities.
 
 ## Related Advisory
 
-**LWA-2026-13364** flags the behaviours documented in this file. Both behaviours are
+**LWA-2026-13364** flags the behaviour documented in this file. This behaviour is
 intentional and opt-out-able (newsletter follow).
 This `SECURITY.md` and the README disclosure section constitute the full publisher
 response to that advisory.

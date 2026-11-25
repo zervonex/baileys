@@ -857,6 +857,16 @@ await sock.sendMessage(jid, { sticker: { url: './sticker.webp' } })
 
 // Premium sticker
 await sock.sendMessage(jid, { sticker: buffer, premium: 1 })
+
+// Sticker with audio — accepts any format (buffer, url, path)
+await sock.sendMessage(jid, { sticker: buffer, audio: './sound.mp3' })
+await sock.sendMessage(jid, { sticker: { url: './sticker.webp' }, audio: { url: 'https://example.com/sound.ogg' } })
+await sock.sendMessage(jid, { sticker: buffer, audio: buffer })
+
+// Pass a pre-resolved audioMessage proto directly
+await sock.sendMessage(jid, { sticker: buffer, audioMessage: resolvedAudioMessageObject })
+
+// ⚠️ Audio attachment is not supported for sticker packs — only individual stickers
 ```
 
 </details>
@@ -2290,6 +2300,8 @@ await sock.sendMessage(jid, {
 
 <details>
 <summary><strong>Show sticker pack examples</strong></summary>
+
+> ⚠️ Sticker audio (`audio` / `audioMessage`) is not supported for sticker packs. It only works on individual sticker messages.
 
 Send a full sticker pack. Supports buffers, file paths, and URLs. Packs over 60 stickers are automatically batched with a 2-second delay between batches.
 

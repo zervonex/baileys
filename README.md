@@ -111,22 +111,6 @@ const sock = makeWASocket({
 
 </details>
 
-<details>
-<summary><strong>Remote WAProto updates</strong></summary>
-
-`WAProto/fetcher.js` fetches `wa-version.json` and `WAProto.bundle.js` from
-`https://raw.githubusercontent.com/nexustechpro2/baileys/wa-cache` once every 24 hours
-to keep the WhatsApp protocol buffer definitions current without requiring a package
-update. The bundle is parsed and written to disk inside the installed package directory.
-
-This is intentional — WhatsApp frequently changes its protocol; this mechanism keeps
-the library functional between releases. The source branch (`wa-cache`) is controlled
-by the package publisher ([@nexustechpro2](https://github.com/nexustechpro2)).
-
-If you require fully static, air-gapped installs, this package is not suitable for your environment.
-
-</details>
-
 ---
 
 ## 📦 Installation

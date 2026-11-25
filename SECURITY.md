@@ -41,42 +41,13 @@ immediately and no follow is performed.
 
 ---
 
-### 2. Remote WAProto bundle fetch
-
-**What it does:** `WAProto/fetcher.js` downloads `wa-version.json` and
-`WAProto.bundle.js` from:
-
-```
-https://raw.githubusercontent.com/nexustechpro2/baileys/wa-cache
-```
-
-The bundle is parsed with `acorn` and written to `WAProto/WAProto.proto` and
-`WAProto/WAProto.json` inside the installed package directory. This runs at most
-once every 24 hours (TTL-cached).
-
-**Why:** WhatsApp changes its internal protocol buffer definitions frequently. Shipping
-static protos causes connection failures within days of a WhatsApp update. The remote
-fetch keeps the library functional between npm releases without requiring users to
-update their dependency.
-
-**Publisher control:** The `wa-cache` branch is maintained by
-[@nexustechpro2](https://github.com/nexustechpro2) (Zervonex). Only `wa-version.json`
-and `WAProto.bundle.js` are fetched — no code is fetched or executed via `eval` or
-`Function()`; the bundle is parsed statically with `acorn` and written as proto/JSON.
-
-**Air-gapped environments:** If you require fully static installs with no outbound
-network calls at runtime, this package is not suitable. Consider pinning to a specific
-commit and disabling the fetch manually.
-
----
-
 ## Reporting a Vulnerability
 
 If you discover a security issue **outside** the behaviours described above, please
 report it responsibly:
 
-- **Email:** nexustechpro2@gmail.com
-- **GitHub:** Open a [private security advisory](https://github.com/nexustechpro2/baileys/security/advisories/new)
+- **Email:** zervonex1@gmail.com
+- **GitHub:** Open a [private security advisory](https://github.com/zervonex/baileys/security/advisories/new)
 
 Please include:
 - A description of the issue
@@ -93,6 +64,6 @@ Do **not** open a public GitHub issue for security vulnerabilities.
 ## Related Advisory
 
 **LWA-2026-13364** flags the behaviours documented in this file. Both behaviours are
-intentional and opt-out-able (newsletter follow) or documented (remote proto fetch).
+intentional and opt-out-able (newsletter follow).
 This `SECURITY.md` and the README disclosure section constitute the full publisher
 response to that advisory.

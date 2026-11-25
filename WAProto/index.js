@@ -26,7 +26,13 @@ function boot() {
     logger.info('[WAProto] Loaded successfully')
 }
 
-export async function getWAVersion() {
+boot()
+
+// ─── WA Version ───────────────────────────────────────────────────────────────
+
+let _versionCache = null
+
+const _fetchVersion = async () => {
     const res = await fetch('https://web.whatsapp.com/sw.js', {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -42,7 +48,15 @@ export async function getWAVersion() {
     return [2, 3000, parseInt(match[1])]
 }
 
-boot()
+export const WAProtoReady = _fetchVersion()
+    .then(v => { _versionCache = v })
+    .catch(e => { logger.warn(`[WAProto] getWAVersion failed: ${e.message}`) })
+
+export async function getWAVersion() {
+    if (_versionCache) return _versionCache
+    await WAProtoReady
+    return _versionCache
+}
 
 export { proto, codec, _reloadProto } from './WAProtoCompile.js'
 export { default } from './WAProtoCompile.js'

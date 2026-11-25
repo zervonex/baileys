@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { fileURLToPath } from 'url'
 import Long from 'long'
 
@@ -212,46 +212,6 @@ function makeCodec(TABLE, enumIndex) {
     }
 }
 
-export async function generateTable(protoPath, outPath) {
-    const pb = await import('protobufjs')
-    const protobuf = pb.default || pb
-    const root = await protobuf.load(protoPath)
-    const msgNames = []
-    const msgIndex = n => { let i = msgNames.indexOf(n); return i < 0 ? msgNames.push(n) - 1 : i }
-    const t = {}, e = {}
-    const build = ns => {
-        for (const o of Object.values(ns.nested ?? {})) {
-            const full = o.fullName.replace(/^\./, '')
-            if (o.values) e[full] = o.values
-            if (o.fieldsArray) {
-                const fs = []
-                for (const f of o.fieldsArray) {
-                    if (f.map) continue
-                    const rt = f.resolvedType
-                    let tc, enumName
-                    if (rt?.fieldsArray !== undefined && rt?.values === undefined) tc = 100 + msgIndex(rt.fullName.replace(/^\./, ''))
-                    else if (rt?.values) { tc = 9; enumName = rt.fullName.replace(/^\./, '') }
-                    else tc = SCALAR_TC[f.type]
-                    const numeric = tc < 100 && tc !== 7 && tc !== 8
-                    const flags = (f.repeated ? 1 : 0) | (f.repeated && numeric && f.packed !== false ? 2 : 0)
-                    if (tc === 9) fs.push([f.name, f.id, 9, flags, enumName])
-                    else if (flags) fs.push([f.name, f.id, tc, flags])
-                    else fs.push([f.name, f.id, tc])
-                }
-                fs.sort((a, b) => a[1] - b[1])
-                t[full] = fs
-            }
-            if (o.nested) build(o)
-        }
-    }
-    build(root)
-    const tmp = outPath + '.tmp'
-    writeFileSync(tmp, JSON.stringify({ m: msgNames, t, e }))
-    const { renameSync } = await import('fs')
-    renameSync(tmp, outPath)
-    return { types: Object.keys(t).length, enums: Object.keys(e).length }
-}
-
 function makeProto(tablePath) {
     const { m, t, e } = JSON.parse(readFileSync(tablePath, 'utf8'))
     const TABLE = buildTable(t, m)
@@ -294,30 +254,17 @@ function makeProto(tablePath) {
     return { proto, codec }
 }
 
-const isGeneratorRun = process.argv[1] && (process.argv[1] === fileURLToPath(import.meta.url) || process.argv.includes('--generate'))
-
-if (isGeneratorRun) {
-    const protoPath = fileURLToPath(new URL('./WAProto.proto', import.meta.url))
-    const outPath = fileURLToPath(new URL('./WAProto.json', import.meta.url))
-    generateTable(protoPath, outPath)
-        .then(r => { process.stdout.write(`[WAProto] Generated: ${r.types} types, ${r.enums} enums\n`); process.exit(0) })
-        .catch(err => { process.stderr.write(err.message + '\n'); process.exit(1) })
-}
-
 const tablePath = fileURLToPath(new URL('./WAProto.json', import.meta.url))
 const built = { proto: {}, codec: null }
 
 export let codec = null
 export function _reloadProto() {
-    if (!existsSync(tablePath)) return
     const loaded = makeProto(tablePath)
     for (const key of Object.keys(built.proto)) delete built.proto[key]
     Object.assign(built.proto, loaded.proto)
     built.codec = loaded.codec
     codec = loaded.codec
 }
-
-if (!isGeneratorRun && existsSync(tablePath)) _reloadProto()
 
 export const proto = built.proto
 export default built

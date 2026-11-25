@@ -23,35 +23,31 @@ function boot() {
 
 boot()
 
-// ─── WA Version ───────────────────────────────────────────────────────────────
-
 let _versionCache = null
 
-const _fetchVersion = async () => {
-    const res = await fetch('https://web.whatsapp.com/sw.js', {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Referer': 'https://web.whatsapp.com',
-            'Sec-Fetch-Dest': 'script',
-            'Sec-Fetch-Mode': 'no-cors',
-            'Sec-Fetch-Site': 'same-origin',
-        }
+export const WAProtoReady = fetch('https://web.whatsapp.com/sw.js', {
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Referer': 'https://web.whatsapp.com',
+        'Sec-Fetch-Dest': 'script',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'same-origin',
+    }
+})
+    .then(res => res.text())
+    .then(text => {
+        const match = text.match(/client_revision[^0-9]*([0-9]+)/)
+        if (!match) throw new Error('[WAProto] client_revision not found in sw.js')
+        const revision = parseInt(match[1], 10)
+        if (isNaN(revision)) throw new Error(`[WAProto] client_revision is NaN: ${match[1]}`)
+        _versionCache = [2, 3000, revision]
+        logger.info(`[WAProto] WA version: ${_versionCache.join('.')}`)
     })
-    const text = await res.text()
-    const match = text.match(/client_revision[^0-9]*([0-9]+)/)
-    if (!match) throw new Error('[WAProto] client_revision not found in sw.js')
-    const revision = parseInt(match[1], 10)
-    if (isNaN(revision)) throw new Error(`[WAProto] client_revision is NaN: ${match[1]}`)
-    return [2, 3000, revision]
-}
+    .catch(err => {
+        logger.warn(`[WAProto] Version fetch failed: ${err.message}`)
+    })
 
-export const WAProtoReady = _fetchVersion()
-    .then(v => { _versionCache = v })
-    .catch(e => { logger.warn(`[WAProto] version fetch failed: ${e.message}`) })
-
-export async function getWAVersion() {
-    if (_versionCache) return _versionCache
-    await WAProtoReady
+export function getWAVersion() {
     if (!_versionCache) throw new Error('[WAProto] WA version unavailable — fetch failed at boot')
     return _versionCache
 }

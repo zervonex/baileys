@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import Long from 'long'
 
@@ -9,11 +9,6 @@ const KIND = [
     { k: 'i64', s: 'long' }, { k: 'i64', s: 'double' }, { k: 'i32', s: 'int' }, { k: 'i32', s: 'float' },
     { k: 'string' }, { k: 'bytes' }, { k: 'varint', s: 'enum' }, { k: 'varint', s: 'long' }, { k: 'varint', s: 'zigzaglong' },
 ]
-
-const SCALAR_TC = {
-    int32: 0, uint32: 0, sint32: 1, bool: 2, fixed64: 3, sfixed64: 3, double: 4,
-    fixed32: 5, sfixed32: 5, float: 6, string: 7, bytes: 8, int64: 10, uint64: 10, sint64: 11,
-}
 
 const isLongLike = v => v !== null && typeof v === 'object' && 'low' in v && 'high' in v
 const longToBigInt = v => (v.unsigned ? BigInt(v.high >>> 0) : BigInt(v.high | 0)) * 4294967296n + BigInt(v.low >>> 0)

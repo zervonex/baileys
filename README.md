@@ -850,6 +850,15 @@ await sock.sendMessage(jid, { sticker: buffer, audio: buffer })
 // Pass a pre-resolved audioMessage proto directly
 await sock.sendMessage(jid, { sticker: buffer, audioMessage: resolvedAudioMessageObject })
 
+// Auto extract audio from video sticker (opt-in)
+await sock.sendMessage(jid, { sticker: videoBuffer, extractAudio: true })
+await sock.sendMessage(jid, { sticker: './sticker.mp4', extractAudio: true })
+await sock.sendMessage(jid, { sticker: { url: 'https://example.com/sticker.mp4' }, extractAudio: true })
+
+// Notes:
+// ⚠️ extractAudio requires the sticker to be a video — passing an image will throw
+// ⚠️ extractAudio: false is the same as not passing it — sticker sends without audio
+// ⚠️ If no audio is provided at all, sticker sends without audio silently
 // ⚠️ Audio attachment is not supported for sticker packs — only individual stickers
 ```
 

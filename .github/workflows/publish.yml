@@ -11,6 +11,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: NPM PUBLISH ENVIRONMENTS
 
     steps:
       - uses: actions/checkout@v4
@@ -36,14 +37,10 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
         if: steps.check.outputs.exists == 'false'
         run: npm publish --access public --provenance --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Skip publish
         if: steps.check.outputs.exists == 'true'

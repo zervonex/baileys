@@ -315,6 +315,13 @@ message Account {
   }
 }
 
+message AccountLinkingOpaqueData {
+  optional string accesstoken = 1;
+  optional string fbid = 2;
+  optional string nonce = 3;
+  optional string encryptedPassword = 4;
+}
+
 message ActionLink {
   optional string url = 1;
   optional string buttonTitle = 2;

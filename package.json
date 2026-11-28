@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@zervonexx/baileys",
   "type": "module",
-  "version": "5.0.6",
+  "version": "5.0.7",
   "description": "Advanced WhatsApp Web API built on Baileys — interactive messages, buttons, carousels, products, events, payments, polls, albums, sticker packs and more.",
   "keywords": [
     "baileys",
@@ -103,7 +103,6 @@
     "cache-manager": "^7.2.9",
     "fflate": "^0.8.2",
     "ffmpeg-static": "^5.3.0",
-    "file-type": "^22.2.0",
     "get-stream": "^9.0.1",
     "got": "^16.2.0",
     "gradient-string": "^3.0.0",
@@ -123,16 +122,13 @@
     "unfurl.js": "^6.4.0",
     "url-regex-safe": "^4.0.0",
     "uuid": "^14.0.3",
-    "wa-sticker-formatter": "^4.4.4",
+    "wa-sticker-formatter": "^5.0.0",
     "whatsapp-rust-bridge": "^0.5.5",
     "ws": "^8.22.0"
   },
   "overrides": {
     "wa-sticker-formatter": {
-      "sharp": "^0.35.5",
-      "axios": "^1.20.0",
-      "file-type": "^22.2.0",
-      "image-size": "^2.0.4"
+      "sharp": "^0.35.5"
     },
     "jest": "^29.0.0",
     "tar": "^7.5.22",
@@ -161,9 +157,6 @@
   },
   "resolutions": {
     "wa-sticker-formatter/sharp": "^0.35.5",
-    "wa-sticker-formatter/axios": "^1.20.0",
-    "wa-sticker-formatter/file-type": "^22.2.0",
-    "wa-sticker-formatter/image-size": "^2.0.4",
     "tar": "^7.5.22",
     "@tootallnate/once": "^3.0.1",
     "image-size": "^2.0.4",
